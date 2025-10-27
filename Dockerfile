@@ -5,6 +5,6 @@ RUN mvn clean package -DskipTests -Dproject.build.sourceEncoding=UTF-8 -Dproject
 
 FROM amazoncorretto:17
 WORKDIR /app
-COPY --from=build /app/target/jwt-2024-api-0.0.1-SNAPSHOT.war app.war
+COPY --from=build /app/target/auth-jwt-20251-0.0.1-SNAPSHOT.war app.war
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.war"]
