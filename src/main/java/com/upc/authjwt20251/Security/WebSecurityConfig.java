@@ -69,7 +69,7 @@ public class WebSecurityConfig {
                 // Rol ADMINISTRADOR
                 .antMatchers("/**").hasRole("ADMINISTRADOR")
 
-                // Rol TURISTA (antes CLIENTE)
+                // Rol TURISTA
                 .antMatchers(HttpMethod.GET,
                         "/actividad/**",
                         "/alojamiento/**",
