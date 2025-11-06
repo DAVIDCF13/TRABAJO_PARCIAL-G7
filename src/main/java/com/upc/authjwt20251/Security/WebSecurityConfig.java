@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -18,11 +19,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
-//@Profile(value = {"development", "production"})
-// Clase S7 - Configuración de Seguridad
 @Configuration
 @EnableWebSecurity
-// Habilita el uso de @PreAuthorize para control de roles a nivel de método
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig {
 
@@ -57,22 +55,87 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
-                .authorizeHttpRequests(auth -> auth
-                        .antMatchers(
-                                "/authenticate",
-                                "/rol/**",
-                                "/usuario/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/swagger-ui/index.html"
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                )
+                .authorizeRequests()
+                .antMatchers(
+                        "/authenticate",
+                        "/rol/**",
+                        "/usuario/**",
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/swagger-ui/index.html"
+                ).permitAll()
+
+                // Rol ADMINISTRADOR
+                .antMatchers("/**").hasRole("ADMINISTRADOR")
+
+                // Rol TURISTA (antes CLIENTE)
+                .antMatchers(HttpMethod.GET,
+                        "/actividad/**",
+                        "/alojamiento/**",
+                        "/carrito/**",
+                        "/destino/**",
+                        "/detalleCarrito/**",
+                        "/historialPuntos/**",
+                        "/notificacion/**",
+                        "/opinionLocal/**",
+                        "/opinionTurista/**",
+                        "/paqueteActividad/**",
+                        "/pago/**",
+                        "/paqueteTuristico/**",
+                        "/productoLocal/**",
+                        "/promocion/**",
+                        "/proveedorServicio/**",
+                        "/puntosFidelidad/**",
+                        "/reserva/**"
+                ).hasRole("TURISTA")
+                .antMatchers(HttpMethod.POST,
+                        "/reserva/**",
+                        "/pago/**",
+                        "/detalleCarrito/**",
+                        "/opinionLocal/**",
+                        "/opinionTurista/**",
+                        "/carrito/**"
+                ).hasRole("TURISTA")
+
+                // Rol LOCAL
+                .antMatchers(HttpMethod.GET,
+                        "/productoLocal/**",
+                        "/paqueteActividad/**",
+                        "/paqueteTuristico/**"
+                ).hasRole("LOCAL")
+                .antMatchers(HttpMethod.POST,
+                        "/productoLocal/**",
+                        "/paqueteActividad/**",
+                        "/paqueteTuristico/**"
+                ).hasRole("LOCAL")
+                .antMatchers(HttpMethod.PUT,
+                        "/productoLocal/**",
+                        "/paqueteActividad/**",
+                        "/paqueteTuristico/**"
+                ).hasRole("LOCAL")
+
+                // Rol PROVEEDOR
+                .antMatchers(HttpMethod.GET,
+                        "/productoLocal/**",
+                        "/proveedorServicio/**"
+                ).hasRole("PROVEEDOR")
+                .antMatchers(HttpMethod.POST,
+                        "/productoLocal/**",
+                        "/proveedorServicio/**"
+                ).hasRole("PROVEEDOR")
+                .antMatchers(HttpMethod.PUT,
+                        "/productoLocal/**",
+                        "/proveedorServicio/**"
+                ).hasRole("PROVEEDOR")
+
+                .anyRequest().authenticated()
+                .and()
                 .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .and()
                 .formLogin().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
